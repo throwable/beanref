@@ -1,0 +1,18 @@
+- Access parameterized types
+- Collection types
+
+[ ] BeanProperty serialization: exclude getterMethod/setterMethod fields from serialization
+    Rewrite serialization:
+    - do not make readResolve() as the lambda's ID will be another
+    - do not cache instance obtained from serialization
+[x] Add iterable to BeanPath
+[-] Custom setter accessor
+[ ] Remove intermediate BEAN parameter from BeanPath<> type definition as it is not used
+[x] Change BeanPath.getName() to BeanPath.getPath()
+[ ] Resolver cache
+[ ] BeanProperty: move write accessor to BeanResolver
+[ ] Collections dereference
+
+-- Dynamic use of properties
+[ ] $(BeanClass) gets a map of String name -> BeanProperty property
+[ ] Restore path from string
