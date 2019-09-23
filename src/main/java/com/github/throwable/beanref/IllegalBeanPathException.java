@@ -1,4 +1,4 @@
-package com.github.throwable.beanutil;
+package com.github.throwable.beanref;
 
 public class IllegalBeanPathException extends RuntimeException {
     public IllegalBeanPathException() {

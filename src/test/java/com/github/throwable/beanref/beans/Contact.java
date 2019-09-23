@@ -1,4 +1,4 @@
-package com.github.throwable.beanutil.beans;
+package com.github.throwable.beanref.beans;
 
 import java.util.List;
 

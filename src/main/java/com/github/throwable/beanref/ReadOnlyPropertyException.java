@@ -1,4 +1,4 @@
-package com.github.throwable.beanutil;
+package com.github.throwable.beanref;
 
 public class ReadOnlyPropertyException extends RuntimeException {
     public ReadOnlyPropertyException() {

@@ -1,4 +1,4 @@
-package com.github.throwable.beanutil.beans;
+package com.github.throwable.beanref.beans;
 
 public class Address {
     private String address;

@@ -1,4 +1,4 @@
-package com.github.throwable.beanutil;
+package com.github.throwable.beanref;
 
 import java.io.Serializable;
 import java.util.function.Function;

@@ -1,5 +1,6 @@
-package com.github.throwable.beanutil.beans;
+package com.github.throwable.beanref.beans;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Person {
@@ -11,6 +12,8 @@ public class Person {
     private Contact contact;
     /** wrapper type */
     private AtomicReference<Status> status = new AtomicReference<>();
+
+    private Set<String> permissions;
 
 
     public Person() {
@@ -47,5 +50,14 @@ public class Person {
 
     public AtomicReference<Status> getStatus() {
         return status;
+    }
+
+
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<String> permissions) {
+        this.permissions = permissions;
     }
 }
