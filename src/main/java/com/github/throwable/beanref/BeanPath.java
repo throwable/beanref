@@ -5,6 +5,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * BeanPath represents a direct or transitive reference to a nested property.
+ * @param <ROOT> root class
+ * @param <TYPE> property's type
+ */
 public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
 {
     private final List<BeanProperty> accessorPath = new ArrayList<>();
@@ -21,6 +26,7 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
 
     /**
      * Obtain path for nested property
+     * @param methodReferenceLambda getter method reference
      */
     public <T> BeanPath<ROOT, T> $(MethodReferenceLambda<TYPE, T> methodReferenceLambda) {
         final BeanProperty<TYPE, T> beanProperty = BeanPropertyResolver.resolveBeanProperty(methodReferenceLambda);
@@ -28,16 +34,18 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     }
 
     /**
-     * Obtain path for collection nested property
-     * @param methodReferenceLambda reference
+     * Obtain path for nested collection property
+     * @param methodReferenceLambda collection getter method reference
      */
     public <T> BeanPath<ROOT, T> $$(MethodReferenceLambda<TYPE, Collection<T>> methodReferenceLambda) {
         return $$(methodReferenceLambda, null);
     }
 
     /**
-     * Obtain path for collection nested property
-     * @param methodReferenceLambda reference
+     * Obtain path for nested collection property
+     * @param methodReferenceLambda collection getter method reference
+     * @param collectionSupplier supplier to automatically create a new collection setting a contained element
+     *                          and the collection is null
      */
     public <T> BeanPath<ROOT, T> $$(
             MethodReferenceLambda<TYPE, Collection<T>> methodReferenceLambda,
@@ -129,6 +137,9 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
         return true;
     }
 
+    /**
+     * @return the type of this property
+     */
     public Class<TYPE> getType() {
         return getLastBeanProperty().getType();
     }
@@ -149,6 +160,9 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
         return accessorPath.get(0);
     }
 
+    /**
+     * @return the type of enclosing object
+     */
     public Class<ROOT> getBeanClass() {
         return getRootBeanProperty().getBeanClass();
     }
@@ -171,10 +185,17 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
         return getPath();
     }
 
+    /**
+     * @return path as string formed by property names separated by '.'
+     */
     public String getPath() {
         return getPath(null);
     }
 
+    /**
+     * @param root root prefix
+     * @return path as string prefixed with root
+     */
     public String getPath(String root) {
         return StreamSupport.stream(this.spliterator(), false)
                 .map(BeanProperty::getPath)

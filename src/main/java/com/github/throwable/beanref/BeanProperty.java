@@ -5,6 +5,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * BeanProperty represents a direct reference to a bean's property.
+ * @param <BEAN> bean class
+ * @param <TYPE> property's type
+ */
 public class BeanProperty<BEAN, TYPE> extends BeanPath<BEAN, TYPE>
 {
     private final Class<BEAN> beanClass;
@@ -40,6 +45,9 @@ public class BeanProperty<BEAN, TYPE> extends BeanPath<BEAN, TYPE>
         return type;
     }
 
+    /**
+     * @return the name of bean's property
+     */
     public String getName() {
         return name;
     }
@@ -49,10 +57,16 @@ public class BeanProperty<BEAN, TYPE> extends BeanPath<BEAN, TYPE>
         return name;
     }
 
+    /**
+     * @return read accessor to a property
+     */
     public Function<BEAN, TYPE> getReadAccessor() {
         return readAccessor;
     }
 
+    /**
+     * @return write accessor to a property (mutator) or null if property is read-only
+     */
     public BiConsumer<BEAN, TYPE> getWriteAccessor() {
         return writeAccessor;
     }
