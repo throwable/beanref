@@ -10,15 +10,20 @@
     <name>beanref</name>
     <description>A simple library that allows to access your POJOs' properties statically</description>
     <url>https://github.com/throwable/beanref</url>
+    <packaging>jar</packaging>
 
     <repositories>
-        <repository>
+        <!--<repository>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
             <id>bintray-antkuranov-pub</id>
             <name>bintray</name>
             <url>https://dl.bintray.com/antkuranov/pub</url>
+        </repository>-->
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
         </repository>
     </repositories>
 
@@ -47,8 +52,9 @@
         <repository>
             <id>bintray-antkuranov-pub</id>
             <name>antkuranov-pub</name>
-            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1</url>-->
-            <url>https://api.bintray.com/maven/antkuranov/pub/beanref/</url>
+            <url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1</url>
+            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1;override=1</url>-->
+            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/</url>-->
         </repository>
     </distributionManagement>
 
