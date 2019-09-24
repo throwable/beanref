@@ -3,7 +3,9 @@ package com.github.throwable.beanref;
 import com.github.throwable.beanref.beans.*;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.throwable.beanref.BeanRef.$;
@@ -139,6 +141,17 @@ public class BeanRefTest {
         assertEquals("12345", personPermissions.get(person));
     }
 
+
+    @Test
+    public void testBeanPropertyCache() {
+        // same reference must be cached
+        BeanProperty<Person, String> p0 = null;
+        for (int i = 0; i < 10; i++) {
+            final BeanProperty<Person, String> p = $(Person::getName);
+            if (p0 == null) p0 = p;
+            else assertSame(p0, p);
+        }
+    }
 
     // This wildcard actually does not work as desired
     // No difference between TCOL and T: both are bounded to Collection<TYPE>.

@@ -7,11 +7,50 @@
     <groupId>com.github.throwable.beanref</groupId>
     <artifactId>beanref</artifactId>
     <version>0.1</version>
+    <name>beanref</name>
+    <description>A simple library that allows to access your POJOs' properties statically</description>
+    <url>https://github.com/throwable/beanref</url>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-antkuranov-pub</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/antkuranov/pub</url>
+        </repository>
+    </repositories>
+
+    <scm>
+        <connection>scm:git:git://github.com/throwable/beanref.git</connection>
+        <developerConnection>scm:git:git://github.com/throwable/beanref.git</developerConnection>
+        <url>https://github.com/throwable/beanref</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
 
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <!-- https://www.jfrog.com/confluence/display/BT/Maven+Repositories -->
+    <distributionManagement>
+        <repository>
+            <id>bintray-antkuranov-pub</id>
+            <name>antkuranov-pub</name>
+            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1</url>-->
+            <url>https://api.bintray.com/maven/antkuranov/pub/beanref/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
