@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.throwable.beanref.BeanRef.$;
@@ -53,7 +54,6 @@ public class BeanRefTest {
     @Test
     public void testBeanPath() {
         final Person person = buildSamplePerson();
-
         //final BeanPath<Person, Phone, String> personPhone = $(Person::getContact).$(Contact::getPhoneList, 0).$(Phone::getPhone);
         final BeanPath<Person, String> personCity = $(Person::getContact).$(Contact::getAddress).$(Address::getCity);
         assertEquals("contact.address.city", personCity.getPath());
@@ -152,6 +152,43 @@ public class BeanRefTest {
             else assertSame(p0, p);
         }
     }
+
+
+    @Test
+    public void testDynamicResolve() {
+        final Person person = buildSamplePerson();
+
+        final BeanPath<Person, ?> cityProp = $(Person::getContact).$(Contact::getAddress).$("city");
+        assertEquals("Noville", cityProp.get(person));
+
+        final BeanPath<Person, String> stateProp = $(Person::getContact).$("address", Address.class).$(Address::getState);
+        assertEquals("Goodland", stateProp.get(person));
+
+        final BeanPath<Person, String> path = $(Person::getContact).$(Contact::getAddress).$(Address::getCity);
+        assertEquals(path, $(Person.class).$("contact").$("address").$("city"));
+        assertEquals(path, $(Person.class).$("contact.address.city"));
+        assertEquals(path, $(Person.class,"contact.address.city"));
+        assertEquals(path, $(Person::getContact).$("address.city"));
+
+        assertEquals("Noville", $(Person.class,"contact.address.city").get(person));
+    }
+
+    @Test
+    public void testListAllPathProperties() {
+        final Set<BeanPath<Person, ?>> addrPropList = $(Person::getContact).$(Contact::getAddress).all();
+        assertEquals(4, addrPropList.size());
+        assertTrue(addrPropList.contains($(Person::getContact).$(Contact::getAddress).$(Address::getCity)));
+        assertTrue(addrPropList.contains($(Person::getContact).$(Contact::getAddress).$(Address::getAddress)));
+        assertTrue(addrPropList.contains($(Person::getContact).$(Contact::getAddress).$(Address::getState)));
+        assertTrue(addrPropList.contains($(Person::getContact).$(Contact::getAddress).$(Address::getZipCode)));
+
+        final Set<BeanPath<Person, ?>> personPropList = $(Person.class).all();
+        assertTrue(personPropList.contains($(Person::getId)));
+        assertTrue(personPropList.contains($(Person::getName)));
+        assertTrue(personPropList.contains($(Person::getContact)));
+        assertTrue(personPropList.contains($(Person::getStatus)));
+    }
+
 
     // This wildcard actually does not work as desired
     // No difference between TCOL and T: both are bounded to Collection<TYPE>.

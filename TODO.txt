@@ -10,7 +10,7 @@
 [x] Collections dereference
 
 -- Dynamic use of properties
-[ ] $(BeanClass) gets a map of String name -> BeanProperty property
-[ ] Restore path from string
+[x] $(BeanClass) gets a map of String name -> BeanProperty property
+[x] Restore path from string
 [ ] BeanProperty/BeanPath serialization
 [ ] Generic access to parameterized types via custom accessors

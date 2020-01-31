@@ -6,7 +6,7 @@
 
     <groupId>com.github.throwable.beanref</groupId>
     <artifactId>beanref</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <name>beanref</name>
     <description>A simple library that allows to access your POJOs' properties statically</description>
     <url>https://github.com/throwable/beanref</url>

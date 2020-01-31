@@ -10,9 +10,9 @@ import java.util.stream.StreamSupport;
  * @param <ROOT> root class
  * @param <TYPE> property's type
  */
-public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
+public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty<?, ?>>
 {
-    private final List<BeanProperty> accessorPath = new ArrayList<>();
+    private final List<BeanProperty<?,?>> accessorPath = new ArrayList<>();
 
     protected BeanPath() {
         accessorPath.add((BeanProperty<?,TYPE>) this);
@@ -31,6 +31,41 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     public <T> BeanPath<ROOT, T> $(MethodReferenceLambda<TYPE, T> methodReferenceLambda) {
         final BeanProperty<TYPE, T> beanProperty = BeanPropertyResolver.resolveBeanProperty(methodReferenceLambda);
         return new BeanPath<>(this, beanProperty);
+    }
+
+    /**
+     * Obtain path for nested property or path
+     * @param path name of property or a path of properties separated by .
+     */
+    public BeanPath<ROOT, ?> $(String path) {
+        final int i = path.indexOf('.');
+        if (i < 0) {
+            final BeanProperty<TYPE, ?> beanProperty = DynamicBeanPropertyResolver.resolveBeanProperty(
+                    getLastBeanProperty().getType(), path);
+            return new BeanPath<>(this, beanProperty);
+        } else {
+            final BeanProperty<TYPE, ?> beanProperty = DynamicBeanPropertyResolver.resolveBeanProperty(
+                    getLastBeanProperty().getType(), path.substring(0, i));
+            return new BeanPath<>(this, beanProperty).$(path.substring(i+1));
+        }
+    }
+
+    /**
+     * Obtain path for nested property or path
+     * @param path name of property or a path of properties separated by .
+     * @param type resulting property's type
+     */
+    public <T> BeanPath<ROOT, T> $(String path, Class<T> type) {
+        final int i = path.indexOf('.');
+        if (i < 0) {
+            final BeanProperty<TYPE, T> beanProperty = DynamicBeanPropertyResolver.resolveBeanProperty(
+                    getLastBeanProperty().getType(), path, type);
+            return new BeanPath<>(this, beanProperty);
+        } else {
+            final BeanProperty<TYPE, ?> beanProperty = DynamicBeanPropertyResolver.resolveBeanProperty(
+                    getLastBeanProperty().getType(), path.substring(0, i));
+            return new BeanPath<>(this, beanProperty).$(path.substring(i+1), type);
+        }
     }
 
     /**
@@ -56,6 +91,20 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
         return new BeanPath<>(this, collectionBeanProperty);
     }
 
+
+    /**
+     * List all properties of the nested bean
+     * @return list of BeanPaths to access every property of nested bean
+     */
+    public Set<BeanPath<ROOT, ?>> all() {
+        final Map<String, BeanProperty<TYPE, ?>> beanProperties = DynamicBeanPropertyResolver
+                .resolveAllBeanProperties(getLastBeanProperty().getType());
+        return beanProperties.values().stream()
+                .map(it -> new BeanPath<>(this, it))
+                .collect(Collectors.toSet());
+    }
+
+
     /**
      * @return true if a referenced property is read-only
      */
@@ -78,10 +127,10 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     public void set(ROOT bean, TYPE value) {
         Object currentBean = Objects.requireNonNull(bean);
         for (int i = 0; i < accessorPath.size()-1; i++) {
-            final BeanProperty beanProperty  = accessorPath.get(i);
+            final BeanProperty<Object, Object> beanProperty  = (BeanProperty<Object, Object>) accessorPath.get(i);
             Object propValue = beanProperty.get(currentBean);
             if (propValue == null) {
-                final Supplier instantiator = beanProperty.getInstantiator();
+                final Supplier<Object> instantiator = beanProperty.getInstantiator();
                 if (instantiator == null)
                     throw new IncompletePathException("Property can not be accessed via path " + this.getPath()
                             + "because " + beanProperty.getPath() + " is null");
@@ -108,11 +157,11 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     @SuppressWarnings("unchecked")
     public TYPE get(ROOT bean) {
         Object current = bean;
-        for (BeanProperty beanProperty : accessorPath) {
+        for (BeanProperty<?,?> beanProperty : accessorPath) {
             if (current == null) {
                 return null;
             } else
-                current = beanProperty.get(current);
+                current = ((BeanProperty<Object,Object>) beanProperty).get(current);
         }
         return (TYPE) current;
     }
@@ -127,11 +176,11 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     {
         Object current = bean;
         int idx = 0;
-        for (BeanProperty beanProperty : accessorPath) {
+        for (BeanProperty<?, ?> beanProperty : accessorPath) {
             if (current == null) {
                 return idx >= accessorPath.size();
             } else
-                current = beanProperty.get(current);
+                current = ((BeanProperty<Object, Object>) beanProperty).get(current);
             idx++;
         }
         return true;
@@ -145,19 +194,19 @@ public class BeanPath<ROOT, TYPE> implements Iterable<BeanProperty>
     }
 
     @Override
-    public Iterator<BeanProperty> iterator() {
+    public Iterator<BeanProperty<?,?>> iterator() {
         return accessorPath.iterator();
     }
 
 
     @SuppressWarnings("unchecked")
     private BeanProperty<?, TYPE> getLastBeanProperty() {
-        return accessorPath.get(accessorPath.size()-1);
+        return (BeanProperty<?, TYPE>) accessorPath.get(accessorPath.size()-1);
     }
 
     @SuppressWarnings("unchecked")
     private BeanProperty<ROOT, ?> getRootBeanProperty() {
-        return accessorPath.get(0);
+        return (BeanProperty<ROOT, ?>) accessorPath.get(0);
     }
 
     /**

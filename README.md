@@ -44,7 +44,7 @@ SerializedLambda serLambda = (SerializedLambda) writeMethod.invoke(lambda);
 String className = serLambda.getImplClass().replaceAll("/", ".");
 String methodName = serLambda.getImplMethodName();
 ```
-Resolving of a property takes a while thus we use cache to speedup successive resolutions. 
+Resolution of a property takes a while thus we use cache to speedup successive resolutions. 
 
 ## Installation
 
@@ -104,6 +104,22 @@ final BeanPath<Person, String> personCityProperty =
 assertEquals("contact.address.city", personCityProperty.getPath());
 assertEquals(Person.class, personCityProperty.getBeanClass());
 assertEquals(String.class, personCityProperty.getType());
+```
+
+#### Dynamic property resolution
+```java
+final BeanPath<Person, String> path = $(Person::getContact).$(Contact::getAddress).$(Address::getCity);
+assertEquals(path, $(Person.class).$("contact").$("address").$("city"));
+assertEquals(path, $(Person::getContact).$("address.city"));
+assertEquals(path, $(Person.class).$("contact.address.city"));
+assertEquals(path, $(Person.class,"contact.address.city"));
+```
+It is still possible to define paths using string property names.
+
+#### Get a set of paths to reference all properties of a bean (root or nested)   
+```java
+final Set<BeanPath<Person, ?>> personPropList = $(Person.class).all();
+final Set<BeanPath<Person, ?>> addrPropList = $(Person::getContact).$(Contact::getAddress).all();
 ```
 
 #### Accessing data

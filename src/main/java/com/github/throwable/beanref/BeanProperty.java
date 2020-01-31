@@ -27,6 +27,7 @@ public class BeanProperty<BEAN, TYPE> extends BeanPath<BEAN, TYPE>
             /*Nullable*/ BiConsumer<BEAN, TYPE> writeAccessor,
                  Supplier<Supplier<TYPE>> instantiatorSupplier)
     {
+        super();
         this.beanClass = beanClass;
         this.type = type;
         this.name = name;

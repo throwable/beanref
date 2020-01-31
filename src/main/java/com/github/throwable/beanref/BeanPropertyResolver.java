@@ -9,8 +9,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 final class BeanPropertyResolver {
+    @SuppressWarnings("rawtypes")
     private static final ConcurrentHashMap<MethodReferenceLambda, BeanProperty> resolvedPropertiesCache =
             new ConcurrentHashMap<>();
+    @SuppressWarnings("rawtypes")
     private static final ConcurrentHashMap<MethodReferenceLambda, BeanProperty> resolvedCollectionPropertiesCache =
             new ConcurrentHashMap<>();
 
@@ -18,18 +20,31 @@ final class BeanPropertyResolver {
     private BeanPropertyResolver() {}
 
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanProperty(MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda) {
-        return resolvedPropertiesCache.computeIfAbsent(methodReferenceLambda, BeanPropertyResolver::resolveBeanPropertyImpl);
+        BeanProperty beanProperty = resolvedPropertiesCache.get(methodReferenceLambda);
+        if (beanProperty == null) {
+            beanProperty = resolveBeanPropertyImpl(methodReferenceLambda);
+            beanProperty = Optional.ofNullable(
+                    resolvedPropertiesCache.putIfAbsent(methodReferenceLambda, beanProperty)
+            ).orElse(beanProperty);
+        }
+        return beanProperty;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanProperty(
             MethodReferenceLambda<BEAN, Collection<TYPE>> methodReferenceLambda,
             /*Nullable*/ Supplier<Collection<TYPE>> collectionInstantiator)
     {
-        return resolvedCollectionPropertiesCache.computeIfAbsent(methodReferenceLambda,
-                (l) -> resolveCollectionBeanPropertyImpl(l, collectionInstantiator));
+        BeanProperty beanProperty = resolvedCollectionPropertiesCache.get(methodReferenceLambda);
+        if (beanProperty == null) {
+            beanProperty = resolveCollectionBeanPropertyImpl(methodReferenceLambda, collectionInstantiator);
+            beanProperty = Optional.ofNullable(
+                    resolvedCollectionPropertiesCache.putIfAbsent(methodReferenceLambda, beanProperty)
+            ).orElse(beanProperty);
+        }
+        return beanProperty;
     }
 
     private static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanPropertyImpl(MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda)
@@ -104,7 +119,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static String resolvePropertyName(String getterMethodName)
+    static String resolvePropertyName(String getterMethodName)
     {
         final String propertyName;
 
@@ -126,7 +141,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static <BEAN, TYPE> /* Nullable */ Method findSetterMethod(Class<BEAN> beanClass, String propertyName, Class<TYPE> type, String getterMethodName) {
+    static <BEAN, TYPE> /* Nullable */ Method findSetterMethod(Class<BEAN> beanClass, String propertyName, Class<TYPE> type, String getterMethodName) {
         if (!getterMethodName.equals(propertyName)) {
             // canonical getXXX(): search for setXXX()
             final String setterMethodName = "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
