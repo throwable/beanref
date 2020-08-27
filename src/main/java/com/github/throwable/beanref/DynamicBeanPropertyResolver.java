@@ -13,8 +13,8 @@ import java.util.function.Function;
 
 public class DynamicBeanPropertyResolver
 {
-    @SuppressWarnings("rawtypes")
-    private static final ConcurrentHashMap<Class, Map<String, BeanProperty>> resolvedBeanPropertiesCache = new ConcurrentHashMap<>();
+	@SuppressWarnings("rawtypes")
+	private static final ConcurrentHashMap<Class, Optional<Map<String, BeanProperty>>> resolvedBeanPropertiesCache = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unchecked")
     static <BEAN, T> BeanProperty<BEAN, T> resolveBeanProperty(Class<BEAN> beanClass, String propertyName, Class<T> type) {
@@ -32,17 +32,13 @@ public class DynamicBeanPropertyResolver
     }
 
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static <BEAN> Map<String, BeanProperty<BEAN, ?>> resolveAllBeanProperties(Class<BEAN> beanClass) {
-        Map beanProperties = resolvedBeanPropertiesCache.get(beanClass);
-        if (beanProperties == null) {
-            beanProperties = resolveAllBeanPropertiesImpl(beanClass);
-            beanProperties = Optional.ofNullable(
-                    resolvedBeanPropertiesCache.putIfAbsent(beanClass, beanProperties)
-            ).orElse(beanProperties);
-        }
-        return beanProperties;
-    }
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	static <BEAN> Map<String, BeanProperty<BEAN, ?>> resolveAllBeanProperties(Class<BEAN> beanClass) {
+		return resolvedBeanPropertiesCache.computeIfAbsent(beanClass, nil -> {
+			Map beanProperties = resolveAllBeanPropertiesImpl(beanClass);
+			return Optional.ofNullable(beanProperties);
+		}).orElse(null);
+	}
 
 
     private static <BEAN> Map<String, BeanProperty<BEAN, ?>> resolveAllBeanPropertiesImpl(Class<BEAN> beanClass)
