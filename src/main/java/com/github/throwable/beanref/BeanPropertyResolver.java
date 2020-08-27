@@ -15,7 +15,7 @@ public class BeanPropertyResolver {
 	private static final ConcurrentHashMap<MethodReferenceLambda, Optional<BeanProperty>> resolvedCollectionPropertiesCache = new ConcurrentHashMap<>();
 
 
-    private BeanPropertyResolver() {}
+    protected BeanPropertyResolver() {}
 
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
