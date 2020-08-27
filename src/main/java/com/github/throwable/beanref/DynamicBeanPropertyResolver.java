@@ -34,8 +34,9 @@ public class DynamicBeanPropertyResolver
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	static <BEAN> Map<String, BeanProperty<BEAN, ?>> resolveAllBeanProperties(Class<BEAN> beanClass) {
-		return (Map) resolvedBeanPropertiesCache.computeIfAbsent(beanClass, nil -> {
-			return Optional.ofNullable(resolveAllBeanPropertiesImpl(beanClass));
+		return (Map<String, BeanProperty<BEAN, ?>>) resolvedBeanPropertiesCache.computeIfAbsent(beanClass, nil -> {
+			Map beanProperties = resolveAllBeanPropertiesImpl(beanClass);
+			return Optional.ofNullable(beanProperties);
 		}).orElse(null);
 	}
 
