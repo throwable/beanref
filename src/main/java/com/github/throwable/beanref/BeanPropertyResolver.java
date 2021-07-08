@@ -8,46 +8,36 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-final class BeanPropertyResolver {
-    @SuppressWarnings("rawtypes")
-    private static final ConcurrentHashMap<MethodReferenceLambda, BeanProperty> resolvedPropertiesCache =
-            new ConcurrentHashMap<>();
-    @SuppressWarnings("rawtypes")
-    private static final ConcurrentHashMap<MethodReferenceLambda, BeanProperty> resolvedCollectionPropertiesCache =
-            new ConcurrentHashMap<>();
+public class BeanPropertyResolver {
+	@SuppressWarnings("rawtypes")
+	private static final ConcurrentHashMap<MethodReferenceLambda, Optional<BeanProperty>> resolvedPropertiesCache = new ConcurrentHashMap<>();
+	@SuppressWarnings("rawtypes")
+	private static final ConcurrentHashMap<MethodReferenceLambda, Optional<BeanProperty>> resolvedCollectionPropertiesCache = new ConcurrentHashMap<>();
 
 
-    private BeanPropertyResolver() {}
+    protected BeanPropertyResolver() {}
 
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanProperty(MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda) {
-        BeanProperty beanProperty = resolvedPropertiesCache.get(methodReferenceLambda);
-        if (beanProperty == null) {
-            beanProperty = resolveBeanPropertyImpl(methodReferenceLambda);
-            beanProperty = Optional.ofNullable(
-                    resolvedPropertiesCache.putIfAbsent(methodReferenceLambda, beanProperty)
-            ).orElse(beanProperty);
-        }
-        return beanProperty;
-    }
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanProperty(
+			MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda) {
+		return resolvedPropertiesCache.computeIfAbsent(methodReferenceLambda, nil -> {
+			BeanProperty beanProperty = resolveBeanPropertyImpl(methodReferenceLambda);
+			return Optional.ofNullable(beanProperty);
+		}).orElse(null);
+	}
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanProperty(
-            MethodReferenceLambda<BEAN, Collection<TYPE>> methodReferenceLambda,
-            /*Nullable*/ Supplier<Collection<TYPE>> collectionInstantiator)
-    {
-        BeanProperty beanProperty = resolvedCollectionPropertiesCache.get(methodReferenceLambda);
-        if (beanProperty == null) {
-            beanProperty = resolveCollectionBeanPropertyImpl(methodReferenceLambda, collectionInstantiator);
-            beanProperty = Optional.ofNullable(
-                    resolvedCollectionPropertiesCache.putIfAbsent(methodReferenceLambda, beanProperty)
-            ).orElse(beanProperty);
-        }
-        return beanProperty;
-    }
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanProperty(
+			MethodReferenceLambda<BEAN, Collection<TYPE>> methodReferenceLambda,
+			/* Nullable */ Supplier<Collection<TYPE>> collectionInstantiator) {
+		return resolvedCollectionPropertiesCache.computeIfAbsent(methodReferenceLambda, nil -> {
+			BeanProperty beanProperty = resolveCollectionBeanPropertyImpl(methodReferenceLambda, collectionInstantiator);
+			return Optional.ofNullable(beanProperty);
+		}).orElse(null);
+	}
 
-    private static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanPropertyImpl(MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda)
+    protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanPropertyImpl(MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda)
     {
         final SerializedLambda serialized = serialized(methodReferenceLambda);
         if (serialized.getImplMethodName().startsWith("lambda$"))
@@ -65,7 +55,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanPropertyImpl(
+    protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanPropertyImpl(
             MethodReferenceLambda<BEAN, Collection<TYPE>> methodReferenceLambda,
             /*Nullable*/ Supplier<Collection<TYPE>> collectionInstantiator)
     {
@@ -102,7 +92,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static <BEAN> Method findGetterMethod(Class<BEAN> beanClass, String getterMethodName) {
+    protected static <BEAN> Method findGetterMethod(Class<BEAN> beanClass, String getterMethodName) {
         final Method getterMethod;
         try {
             getterMethod = beanClass.getMethod(getterMethodName);
@@ -119,7 +109,7 @@ final class BeanPropertyResolver {
     }
 
 
-    static String resolvePropertyName(String getterMethodName)
+    protected static String resolvePropertyName(String getterMethodName)
     {
         final String propertyName;
 
@@ -141,7 +131,7 @@ final class BeanPropertyResolver {
     }
 
 
-    static <BEAN, TYPE> /* Nullable */ Method findSetterMethod(Class<BEAN> beanClass, String propertyName, Class<TYPE> type, String getterMethodName) {
+    protected static <BEAN, TYPE> /* Nullable */ Method findSetterMethod(Class<BEAN> beanClass, String propertyName, Class<TYPE> type, String getterMethodName) {
         if (!getterMethodName.equals(propertyName)) {
             // canonical getXXX(): search for setXXX()
             final String setterMethodName = "set" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
@@ -163,7 +153,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static SerializedLambda serialized(Object lambda) {
+    protected static SerializedLambda serialized(Object lambda) {
         try {
             Method writeMethod = lambda.getClass().getDeclaredMethod("writeReplace");
             writeMethod.setAccessible(true);
@@ -175,7 +165,7 @@ final class BeanPropertyResolver {
 
 
     @SuppressWarnings("unchecked")
-    private static <T> Class<T> getContainingClass(SerializedLambda lambda) {
+    protected static <T> Class<T> getContainingClass(SerializedLambda lambda) {
         try {
             String className = lambda.getImplClass().replaceAll("/", ".");
             //System.out.println(lambda.getInstantiatedMethodType());
@@ -254,7 +244,7 @@ final class BeanPropertyResolver {
     }
 
 
-    private static <TYPE> Supplier<Supplier<Collection<TYPE>>> defaultCollectionInstantiatorResolver(Class<Collection<TYPE>> collectionType) {
+    protected static <TYPE> Supplier<Supplier<Collection<TYPE>>> defaultCollectionInstantiatorResolver(Class<Collection<TYPE>> collectionType) {
         if ((collectionType.getModifiers() & Modifier.ABSTRACT) != 0) {
             if (collectionType.isAssignableFrom(List.class))
                 return () -> ArrayList::new;
