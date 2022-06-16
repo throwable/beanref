@@ -1,9 +1,10 @@
 package com.github.throwable.beanref;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,7 +15,8 @@ public class BeanRefTestLFP {
 
 	public static void main(String[] args) throws IOException {
 		System.out.println(Stream.of(Future.class, Future.class, Runnable.class)
-				.collect(Collectors.toCollection(LinkedHashSet::new)).equals(Set.of(Runnable.class, Future.class)));
+				.collect(Collectors.toCollection(LinkedHashSet::new))
+				.equals(new HashSet<Class<?>>(Arrays.asList(Runnable.class, Future.class))));
 
 		Date date0 = new Date();
 		Date date1 = new Date() {};
