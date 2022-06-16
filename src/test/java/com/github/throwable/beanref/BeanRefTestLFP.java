@@ -1,0 +1,30 @@
+package com.github.throwable.beanref;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.github.throwable.beanref.lfp.BeanRefUtils;
+
+public class BeanRefTestLFP {
+
+	public static void main(String[] args) throws IOException {
+		System.out.println(Stream.of(Future.class, Future.class, Runnable.class)
+				.collect(Collectors.toCollection(LinkedHashSet::new)).equals(Set.of(Runnable.class, Future.class)));
+
+		Date date0 = new Date();
+		Date date1 = new Date() {};
+		System.out.println(BeanRef.$(date0.getClass()).all().size());
+		System.out.println(BeanRef.$(date1.getClass()).all().size());
+		System.out.println(BeanRef.$(Date::getTime).getPath());
+		System.out.println(BeanRef.$(Date::getTime).getPath());
+		MethodReferenceLambda<Date, Long> mrl0 = Date::getTime;
+		MethodReferenceLambda<Date, Long> mrl1 = Date::getTime;
+		System.out.println(BeanRefUtils.hash(mrl0).equals(BeanRefUtils.hash(mrl1)));
+	}
+
+}
