@@ -12,21 +12,6 @@
     <url>https://github.com/throwable/beanref</url>
     <packaging>jar</packaging>
 
-    <repositories>
-        <!--<repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-antkuranov-pub</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/antkuranov/pub</url>
-        </repository>-->
-        <repository>
-            <id>jcenter</id>
-            <url>https://jcenter.bintray.com/</url>
-        </repository>
-    </repositories>
-
     <scm>
         <connection>scm:git:git://github.com/throwable/beanref.git</connection>
         <developerConnection>scm:git:git://github.com/throwable/beanref.git</developerConnection>
@@ -34,10 +19,20 @@
         <tag>HEAD</tag>
     </scm>
 
+    <developers>
+        <developer>
+            <id>owner</id>
+            <name>Anton Kuranov</name>
+            <email>ant.kuranov@gmail.com</email>
+            <timezone>UTC+2</timezone>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>MIT</name>
             <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
 
@@ -47,14 +42,15 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!-- https://www.jfrog.com/confluence/display/BT/Maven+Repositories -->
     <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
         <repository>
-            <id>bintray-antkuranov-pub</id>
-            <name>antkuranov-pub</name>
-            <url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1</url>
-            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/;publish=1;override=1</url>-->
-            <!--<url>https://api.bintray.com/maven/antkuranov/pub/beanref/</url>-->
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+            </url>
         </repository>
     </distributionManagement>
 
@@ -62,7 +58,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -91,6 +87,20 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>

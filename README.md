@@ -7,33 +7,35 @@ generation or bytecode manipulation is required.
 
 ```java
 Person person = ...
-// create static path refrence
+
+// We can define property paths staticaly in a type-safe manner...
 final BeanPath<Person, String> personCityProperty = 
     $(Person::getContact).$(Contact::getAddress).$(Address::getCity);
-// the main goal is to obtain path in a static way
 assertEquals("contact.address.city", personCityProperty.getPath());
-// to access members transitively
+
+// ...and also access property's value via BeanPath.
 personCityProperty.set(person, "Madrid");
-// the same as person.getContact().getAddress().getCity()
+
+// When accessing transitive properties we do not throw NPEs.
+// The same as person.getContact().getAddress().getCity() but without NPE.
 assertEquals("Madrid", personCityProperty.get(person));
 ``` 
 
-- static type-safe references to properties
-- transitive access to nested properties
-- get/set values via reference
+- To be able to define a static type-safe references to bean's properties or to transitive paths.
+- Evaluate and access property's value via reference.
+- Minimize NPE impact over property operations.
 
 ### Why?
 
-The main goal is to improve code maintainability and natively provide support of properties for your IDE: 
+The main goal is to improve code's maintainability and provide native support of properties for your IDE: 
 - compile-time control of property names
 - code-completion
 - simple analysis and refactoring of your code
 
 ### How?
 
-We use a getter-method lambda to construct a reference to the property. The problem is that inside lambda we have no direct
-information about target class and invoked method thus we need to use a simple trick: transform lambda to
-`java.lang.invoke.SerializedLambda` object that allows us to obtain class name and method.
+We use a getter-method lambda to construct a reference to the property. To obtain the information about target class
+and the invoked method we transform out lambda into `java.lang.invoke.SerializedLambda` object that has all the necessary data.
 ```java
 public interface MethodReferenceLambda<BEAN, TYPE> extends Function<BEAN, TYPE>, Serializable {}
 ...
@@ -44,22 +46,14 @@ SerializedLambda serLambda = (SerializedLambda) writeMethod.invoke(lambda);
 String className = serLambda.getImplClass().replaceAll("/", ".");
 String methodName = serLambda.getImplMethodName();
 ```
-Resolution of a property takes a while thus we use cache to speedup successive resolutions. 
+Resolved properties' lambdas then cached to speedup successive resolutions. 
 
 ## Installation
 
 ### Maven
-Available in JCenter repository
+
 ```xml
-<repositories>
-    <repository>
-        <id>jcenter</id>
-        <url>https://jcenter.bintray.com/</url>
-    </repository>
-</repositories>
-...
 <dependencies>
-    ...
     <dependency>
         <groupId>com.github.throwable.beanref</groupId>
         <artifactId>beanref</artifactId>
@@ -70,13 +64,7 @@ Available in JCenter repository
 ### Gradle
 
 ```groovy
-repositories {
-    mavenCentral()
-    jcenter()
-}
-...
 dependencies {
-    ...
     compile 'com.github.throwable.beanref:beanref:0.1'
 }
 ```
@@ -93,9 +81,7 @@ assertEquals(String.class, personNameProperty.getType());
 assertTrue(personNameProperty.isReadOnly());
 ```
 Getter/setter method names may follow the convention of java beans (getXXX()/isXXX() for getter and setXXX(xxx) for
-setter). If the name of getrer method does not start with "get/is") the whole getter's name is used as the name of a
-property. In this case a correspondent setter method must also have it's name without "set" prefix. If no correspondent
-setter method was found a property is declared as read-only.
+setter), but fluent accessor notation (xxx()) is also supported.
 
 #### Referencing nested properties:
 ```java
@@ -114,7 +100,7 @@ assertEquals(path, $(Person::getContact).$("address.city"));
 assertEquals(path, $(Person.class).$("contact.address.city"));
 assertEquals(path, $(Person.class,"contact.address.city"));
 ```
-It is still possible to define paths using string property names.
+It is still possible to define paths using strings.
 
 #### Get a set of paths to reference all properties of a bean (root or nested)   
 ```java
@@ -148,7 +134,7 @@ person.setContact(null);
 assertNull(personCityProperty.get(person));
 ```
 If path is incomplete the library tries to re-create missing transitive beans using no-args constructor (if
-any). If it was not possible to instantiate missing bean an IncompletePathException is thrown.
+any). If it is not possible to instantiate a transitive bean an IncompletePathException will be thrown.
 ```java
 // empty object
 Person person = new Person();
@@ -160,7 +146,7 @@ assertEquals("Madrid", personCityProperty.get(person));
 assertEquals("Madrid", person.getContact().getAddress().getCity());
 ```
 
-#### Collections support (bonus)
+#### Collections support (experimental, may be changed or removed in future releases)
 
 Sometimes it is needed to construct paths that reference elements inside a collection. 
 In this case the library treats collections as a single-element containers.
