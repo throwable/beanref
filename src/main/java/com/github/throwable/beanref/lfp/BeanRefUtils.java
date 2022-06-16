@@ -47,7 +47,7 @@ public class BeanRefUtils {
 	}
 
 	private static void update(MessageDigest messageDigest, Serializable serializable) throws IOException {
-		try (OutputStream os = OutputStream.nullOutputStream();
+		try (OutputStream os = nullOutputStream();
 				DigestOutputStream digestOutputStream = new DigestOutputStream(os, messageDigest);
 				ObjectOutputStream oos = new ObjectOutputStream(digestOutputStream);) {
 			oos.writeObject(serializable);
@@ -99,5 +99,19 @@ public class BeanRefUtils {
 		if (classType.isInterface() || Modifier.isAbstract(classType.getModifiers()) || classType.isAnonymousClass())
 			return false;
 		return classType.getName().contains("$$Lambda");
+	}
+
+	private static OutputStream nullOutputStream() {
+		return new OutputStream() {
+
+			@Override
+			public void write(final byte[] b, final int off, final int len) {}
+
+			@Override
+			public void write(final int b) {}
+
+			@Override
+			public void write(final byte[] b) throws IOException {}
+		};
 	}
 }

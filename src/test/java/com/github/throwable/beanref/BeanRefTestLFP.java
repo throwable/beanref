@@ -25,6 +25,9 @@ public class BeanRefTestLFP {
 		MethodReferenceLambda<Date, Long> mrl0 = Date::getTime;
 		MethodReferenceLambda<Date, Long> mrl1 = Date::getTime;
 		System.out.println(BeanRefUtils.hash(mrl0).equals(BeanRefUtils.hash(mrl1)));
+		System.out.println(BeanRefUtils.hash(mrl0));
+		System.out.println(BeanRefUtils.hash(mrl1));
+		System.out.println(BeanRefUtils.hash((MethodReferenceLambda<Date, ? extends Object>) Date::getDay));
 	}
 
 }
