@@ -10,13 +10,18 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.throwable.beanref.BeanPropertyResolver;
 
 @SuppressWarnings("unchecked")
 public class BeanRefUtils {
@@ -26,6 +31,35 @@ public class BeanRefUtils {
 
 	public static <K, V> Caffeine<K, V> cacheBuilder() {
 		return (Caffeine<K, V>) Caffeine.newBuilder().expireAfterAccess(CACHE_EXPIRE_AFTER_ACCESS).softValues();
+	}
+
+	public static Stream<ClassLoader> streamClassLoaders() {
+		List<Supplier<ClassLoader>> loaders = Arrays.asList(new Supplier<ClassLoader>() {
+
+			@Override
+			public ClassLoader get() {
+				return Thread.currentThread().getContextClassLoader();
+			}
+		}, new Supplier<ClassLoader>() {
+
+			@Override
+			public ClassLoader get() {
+				return BeanPropertyResolver.class.getClassLoader();
+			}
+		}, new Supplier<ClassLoader>() {
+
+			@Override
+			public ClassLoader get() {
+				return ClassLoader.getSystemClassLoader();
+			}
+		}, new Supplier<ClassLoader>() {
+
+			@Override
+			public ClassLoader get() {
+				return ClassLoader.getPlatformClassLoader();
+			}
+		});
+		return loaders.stream().filter(Objects::nonNull).map(Supplier::get).filter(Objects::nonNull).distinct();
 	}
 
 	public static String hash(Serializable... serializables) {
@@ -46,14 +80,6 @@ public class BeanRefUtils {
 		return Base64.getEncoder().encodeToString(digest);
 	}
 
-	private static void update(MessageDigest messageDigest, Serializable serializable) throws IOException {
-		try (OutputStream os = nullOutputStream();
-				DigestOutputStream digestOutputStream = new DigestOutputStream(os, messageDigest);
-				ObjectOutputStream oos = new ObjectOutputStream(digestOutputStream);) {
-			oos.writeObject(serializable);
-		}
-	}
-
 	public static <U> Set<Class<?>> getNamedClassTypes(Class<? extends U> classType) {
 		Objects.requireNonNull(classType);
 		Set<Class<?>> classTypes = new LinkedHashSet<>();
@@ -61,6 +87,14 @@ public class BeanRefUtils {
 		if (classTypes.isEmpty())
 			classTypes.add(classType);
 		return Collections.unmodifiableSet(classTypes);
+	}
+
+	private static void update(MessageDigest messageDigest, Serializable serializable) throws IOException {
+		try (OutputStream os = OutputStream.nullOutputStream();
+				DigestOutputStream digestOutputStream = new DigestOutputStream(os, messageDigest);
+				ObjectOutputStream oos = new ObjectOutputStream(digestOutputStream);) {
+			oos.writeObject(serializable);
+		}
 	}
 
 	private static void addNamedClassTypes(Class<?> classType, Set<Class<?>> classTypes) {
@@ -101,17 +135,4 @@ public class BeanRefUtils {
 		return classType.getName().contains("$$Lambda");
 	}
 
-	private static OutputStream nullOutputStream() {
-		return new OutputStream() {
-
-			@Override
-			public void write(final byte[] b, final int off, final int len) {}
-
-			@Override
-			public void write(final int b) {}
-
-			@Override
-			public void write(final byte[] b) throws IOException {}
-		};
-	}
 }

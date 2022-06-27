@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.throwable.beanref.lfp.BeanRefUtils;
@@ -182,7 +180,7 @@ public class BeanPropertyResolver {
 	protected static <T> Class<T> getContainingClass(SerializedLambda lambda) {
 		String className = getContainingClassName(lambda).replaceAll("/", ".");
 		RuntimeException error = null;
-		Iterator<ClassLoader> classLoaderIter = streamDefaultClassLoaders().iterator();
+		Iterator<ClassLoader> classLoaderIter = BeanRefUtils.streamClassLoaders().iterator();
 		while (classLoaderIter.hasNext()) {
 			ClassLoader classLoader = classLoaderIter.next();
 			try {
@@ -346,26 +344,4 @@ public class BeanPropertyResolver {
 		}
 	}
 
-	private static Stream<ClassLoader> streamDefaultClassLoaders() {
-		List<Supplier<ClassLoader>> loaders = Arrays.asList(new Supplier<ClassLoader>() {
-
-			@Override
-			public ClassLoader get() {
-				return Thread.currentThread().getContextClassLoader();
-			}
-		}, new Supplier<ClassLoader>() {
-
-			@Override
-			public ClassLoader get() {
-				return BeanPropertyResolver.class.getClassLoader();
-			}
-		}, new Supplier<ClassLoader>() {
-
-			@Override
-			public ClassLoader get() {
-				return ClassLoader.getSystemClassLoader();
-			}
-		});
-		return loaders.stream().filter(Objects::nonNull).map(Supplier::get).filter(Objects::nonNull).distinct();
-	}
 }
