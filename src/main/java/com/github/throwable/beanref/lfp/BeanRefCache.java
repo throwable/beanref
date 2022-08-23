@@ -40,6 +40,32 @@ public interface BeanRefCache {
 
 	}
 
+	public static abstract class Abs implements BeanRefCache {
+
+		private final Map<Object, Object> lockMap = new ConcurrentHashMap<Object, Object>();
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <K, V> V get(K key, Function<K, V> loader) {
+			Objects.requireNonNull(key);
+			Objects.requireNonNull(loader);
+			var value = getInternal(key);
+			if (value == null) {
+				Object[] resultRef = new Object[1];
+				lockMap.compute(key, (nilk, nilv) -> {
+					resultRef[0] = getInternal(key, loader);
+					return null;
+				});
+				value = resultRef[0];
+			}
+			return (V) value;
+		}
+
+		protected abstract Object getInternal(Object key);
+
+		protected abstract <K, V> Object getInternal(K key, Function<K, V> loader);
+	}
+
 	static enum Static {
 		;
 
@@ -98,26 +124,16 @@ public interface BeanRefCache {
 			if (beanRefCache != null)
 				return beanRefCache;
 			var cache = new WeakHashMap<Object, Object>();
-			var concurrentCache = new ConcurrentHashMap<Object, Object>();
-			return new BeanRefCache() {
+			return new BeanRefCache.Abs() {
 
-				@SuppressWarnings("unchecked")
 				@Override
-				public <K, V> V get(K key, Function<K, V> loader) {
-					Objects.requireNonNull(key);
-					Objects.requireNonNull(loader);
-					var value = cache.get(key);
-					if (value == null) {
-						Object[] resultRef = new Object[1];
-						concurrentCache.compute(key, (nilk, nilv) -> {
-							resultRef[0] = cache.computeIfAbsent(key, nil -> {
-								return loader.apply(key);
-							});
-							return null;
-						});
-						value = resultRef[0];
-					}
-					return (V) value;
+				protected Object getInternal(Object key) {
+					return cache.get(key);
+				}
+
+				@Override
+				protected <K, V> Object getInternal(K key, Function<K, V> loader) {
+					return cache.computeIfAbsent(key, nil -> loader.apply(key));
 				}
 			};
 		}
