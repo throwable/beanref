@@ -54,12 +54,19 @@
             </url>
 		</repository>
 	</distributionManagement>
+	
+	<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
-			<groupId>com.github.ben-manes.caffeine</groupId>
-			<artifactId>caffeine</artifactId>
-			<version>${com.github.ben-manes.caffeine.caffeine.version}</version>
+			<groupId>com.github.regbo</groupId>
+			<artifactId>lfp-picoservice</artifactId>
+			<version>f91ff54</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

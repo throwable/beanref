@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -19,38 +20,34 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.benmanes.caffeine.cache.Cache;
+import com.github.throwable.beanref.lfp.BeanRefCache;
 import com.github.throwable.beanref.lfp.BeanRefUtils;
 
 public class BeanPropertyResolver {
 
-	private static final String RESOLVED_BEAN_PROPERTIES_KEY_PREFIX = "resolved-bp-";
-	private static final String RESOLVED_COLLECTION_BEAN_PROPERTIES_KEY_PREFIX = "resolved-collection-bp-";
-	private static final Cache<String, BeanProperty<?, ?>> RESOLVED_BEAN_PROPERTIES_CACHE = BeanRefUtils.cacheBuilder()
-			.build();
-
 	protected BeanPropertyResolver() {}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveBeanProperty(
 			MethodReferenceLambda<BEAN, TYPE> methodReferenceLambda) {
 		Objects.requireNonNull(methodReferenceLambda);
 		String hash = BeanRefUtils.hash(methodReferenceLambda);
-		String key = RESOLVED_BEAN_PROPERTIES_KEY_PREFIX + hash;
-		return (BeanProperty) RESOLVED_BEAN_PROPERTIES_CACHE.get(key, nil -> {
+		Object key = Arrays.asList(hash, "resolveBeanProperty");
+		return BeanRefCache.instance().get(key, nil -> {
 			return resolveBeanPropertyImpl(methodReferenceLambda);
 		});
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected static <BEAN, TYPE> BeanProperty<BEAN, TYPE> resolveCollectionBeanProperty(
 			MethodReferenceLambda<BEAN, Collection<TYPE>> methodReferenceLambda,
 			/* Nullable */ Supplier<Collection<TYPE>> collectionInstantiator) {
 		Objects.requireNonNull(methodReferenceLambda);
-		String hash = BeanRefUtils.hash(methodReferenceLambda, Optional.ofNullable(collectionInstantiator)
-				.filter(Serializable.class::isInstance).map(Serializable.class::cast).orElse(null));
-		String key = RESOLVED_COLLECTION_BEAN_PROPERTIES_KEY_PREFIX + hash;
-		return (BeanProperty) RESOLVED_BEAN_PROPERTIES_CACHE.get(key, nil -> {
+		String hash = BeanRefUtils.hash(methodReferenceLambda,
+				Optional.ofNullable(collectionInstantiator)
+						.filter(Serializable.class::isInstance)
+						.map(Serializable.class::cast)
+						.orElse(null));
+		Object key = Arrays.asList(hash, "resolveCollectionBeanProperty");
+		return BeanRefCache.instance().get(key, nil -> {
 			return resolveCollectionBeanPropertyImpl(methodReferenceLambda, collectionInstantiator);
 		});
 	}
@@ -180,7 +177,7 @@ public class BeanPropertyResolver {
 	protected static <T> Class<T> getContainingClass(SerializedLambda lambda) {
 		String className = getContainingClassName(lambda).replaceAll("/", ".");
 		RuntimeException error = null;
-		Iterator<ClassLoader> classLoaderIter = BeanRefUtils.streamClassLoaders().iterator();
+		Iterator<ClassLoader> classLoaderIter = BeanRefUtils.streamDefaultClassLoaders().iterator();
 		while (classLoaderIter.hasNext()) {
 			ClassLoader classLoader = classLoaderIter.next();
 			try {

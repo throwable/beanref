@@ -3,20 +3,18 @@ package com.github.throwable.beanref;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import com.github.benmanes.caffeine.cache.Cache;
+import com.github.throwable.beanref.lfp.BeanRefCache;
 import com.github.throwable.beanref.lfp.BeanRefUtils;
 
 public class DynamicBeanPropertyResolver {
-
-	private static final Cache<Set<Class<?>>, Map<String, BeanProperty<?, ?>>> RESOLVED_BEAN_PROPERTIES_CACHE = BeanRefUtils
-			.cacheBuilder().build();
 
 	@SuppressWarnings("unchecked")
 	static <BEAN, T> BeanProperty<BEAN, T> resolveBeanProperty(Class<BEAN> beanClass, String propertyName,
@@ -36,13 +34,14 @@ public class DynamicBeanPropertyResolver {
 		return beanProperty;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	static <BEAN> Map<String, BeanProperty<BEAN, ?>> resolveAllBeanProperties(Class<BEAN> beanClass) {
-		Set<Class<?>> namedClassTypes = BeanRefUtils.getNamedClassTypes(beanClass);
-		return (Map) RESOLVED_BEAN_PROPERTIES_CACHE.get(namedClassTypes, nil -> {
-			Map<String, BeanProperty<?, ?>> beanProperties = new HashMap<>();
-			for (Class<?> namedClassType : namedClassTypes)
-				beanProperties.putAll(resolveAllBeanPropertiesImpl(namedClassType));
+		{
+			var namedBeanClass = BeanRefUtils.getNamedClassType(beanClass);
+			if (!Objects.equals(namedBeanClass, beanClass))
+				return resolveAllBeanProperties(namedBeanClass);
+		}
+		return BeanRefCache.instance().get(Arrays.asList(beanClass, "resolveAllBeanProperties"), nil -> {
+			Map<String, BeanProperty<BEAN, ?>> beanProperties = resolveAllBeanPropertiesImpl(beanClass);
 			return Collections.unmodifiableMap(beanProperties);
 		});
 	}
