@@ -201,6 +201,13 @@ public class BeanPropertyResolver {
 					throw new RuntimeException(e.getTargetException());
 			}
 		}
+
+		/**
+		 * @return the setterMethod
+		 */
+		public Method getSetterMethod() {
+			return setterMethod;
+		}
 	}
 
 	public static class InstantiatorResolver<TYPE> implements Supplier<Supplier<TYPE>> {

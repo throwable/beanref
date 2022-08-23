@@ -103,5 +103,13 @@ public class DynamicBeanPropertyResolver {
 					throw new RuntimeException(e.getTargetException());
 			}
 		}
+
+		/**
+		 * @return the getterMethod
+		 */
+		public Method getGetterMethod() {
+			return getterMethod;
+		}
+
 	}
 }
