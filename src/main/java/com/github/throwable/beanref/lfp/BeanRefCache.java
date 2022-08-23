@@ -79,7 +79,7 @@ public interface BeanRefCache {
 			registrationAnnos = registrationAnnos
 					.sorted(Comparator.<Entry<IPicoRegistration, BeanRefCacheService>, Integer>comparing(ent -> {
 						var anno = ent.getValue();
-						return anno.priority();
+						return -1 * anno.priority();
 					}));
 			var beanRefCache = registrationAnnos.map(Entry::getKey).map(registration -> {
 				var ct = registration.getAnnotatedClass();
