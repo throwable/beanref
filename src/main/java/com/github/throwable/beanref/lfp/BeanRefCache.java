@@ -49,21 +49,28 @@ public interface BeanRefCache {
 		public <K, V> V get(K key, Function<K, V> loader) {
 			Objects.requireNonNull(key);
 			Objects.requireNonNull(loader);
-			var value = getInternal(key);
-			if (value == null) {
-				Object[] resultRef = new Object[1];
-				lockMap.compute(key, (nilk, nilv) -> {
-					resultRef[0] = getInternal(key, loader);
-					return null;
-				});
-				value = resultRef[0];
+			{
+				var value = get(key);
+				if (value != null)
+					return (V) value;
 			}
-			return (V) value;
+			Object[] resultRef = new Object[1];
+			lockMap.compute(key, (nilk, nilv) -> {
+				var value = get(key);
+				if (value == null) {
+					value = loader.apply(key);
+					put(key, value);
+				}
+				resultRef[0] = value;
+				return null;
+			});
+			return (V) resultRef[0];
+
 		}
 
-		protected abstract Object getInternal(Object key);
+		protected abstract Object get(Object key);
 
-		protected abstract <K, V> Object getInternal(K key, Function<K, V> loader);
+		protected abstract void put(Object key, Object value);
 	}
 
 	static enum Static {
@@ -127,13 +134,13 @@ public interface BeanRefCache {
 			return new BeanRefCache.Abs() {
 
 				@Override
-				protected Object getInternal(Object key) {
+				protected Object get(Object key) {
 					return cache.get(key);
 				}
 
 				@Override
-				protected <K, V> Object getInternal(K key, Function<K, V> loader) {
-					return cache.computeIfAbsent(key, nil -> loader.apply(key));
+				protected void put(Object key, Object value) {
+					cache.put(key, value);
 				}
 			};
 		}
