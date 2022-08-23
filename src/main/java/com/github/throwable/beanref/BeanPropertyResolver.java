@@ -176,23 +176,7 @@ public class BeanPropertyResolver {
 	@SuppressWarnings("unchecked")
 	protected static <T> Class<T> getContainingClass(SerializedLambda lambda) {
 		String className = getContainingClassName(lambda).replaceAll("/", ".");
-		RuntimeException error = null;
-		Iterator<ClassLoader> classLoaderIter = BeanRefUtils.streamDefaultClassLoaders().iterator();
-		while (classLoaderIter.hasNext()) {
-			ClassLoader classLoader = classLoaderIter.next();
-			try {
-				return (Class<T>) Class.forName(className, true, classLoader);
-			} catch (Throwable t) {
-				if (error == null)
-					if (t instanceof RuntimeException)
-						error = (RuntimeException) t;
-					else
-						error = new RuntimeException(t);
-				else
-					error.addSuppressed(t);
-			}
-		}
-		throw error;
+		return (Class<T>) BeanRefUtils.classForName(className, false);
 	}
 
 	public static class SetterWriteAccessor<BEAN, TYPE> implements BiConsumer<BEAN, TYPE> {

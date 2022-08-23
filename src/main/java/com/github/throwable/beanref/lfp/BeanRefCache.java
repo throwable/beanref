@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.WeakHashMap;
@@ -54,24 +56,32 @@ public interface BeanRefCache {
 		}
 
 		private static BeanRefCache loadInstance() {
-			var clStream = Stream.concat(Stream.of((ClassLoader) null), BeanRefUtils.streamDefaultClassLoaders())
+			var classLoaders = Stream.concat(Stream.of((ClassLoader) null), BeanRefUtils.streamDefaultClassLoaders())
 					.distinct();
-			var serviceProviderStream = clStream.flatMap(cl -> {
+			var serviceProviers = classLoaders.flatMap(cl -> {
 				var serviceLoader = cl == null ? ServiceLoader.load(IPicoRegistration.class)
 						: ServiceLoader.load(IPicoRegistration.class, cl);
 				return serviceLoader.stream();
 			}).distinct();
-			var registrationStream = serviceProviderStream.map(ServiceLoader.Provider::get);
-			registrationStream = registrationStream
-					.filter(v -> BeanRefCache.class.isAssignableFrom(v.getAnnotatedClass()));
-			registrationStream = registrationStream.filter(registration -> {
-				return registration.getAnnotatedClass().getAnnotation(BeanRefCacheService.class) != null;
+			var registrationAnnos = serviceProviers.map(ServiceLoader.Provider::get).map(registration -> {
+				var anno = registration.getAnnotatedClass().getAnnotation(BeanRefCacheService.class);
+				if (anno == null)
+					return null;
+				return Map.entry(registration, anno);
+			}).filter(Objects::nonNull);
+			registrationAnnos = registrationAnnos.filter(ent -> {
+				var registration = ent.getKey();
+				if (!BeanRefCache.class.isAssignableFrom(ent.getKey().getAnnotatedClass()))
+					return false;
+				var anno = ent.getValue();
+				return Stream.of(anno.requiredClassNames()).allMatch(v -> BeanRefUtils.classForName(v, true) != null);
 			});
-			registrationStream = registrationStream
-					.sorted(Comparator.<IPicoRegistration, Integer>comparing(registration -> {
-						return registration.getAnnotatedClass().getAnnotation(BeanRefCacheService.class).priority();
+			registrationAnnos = registrationAnnos
+					.sorted(Comparator.<Entry<IPicoRegistration, BeanRefCacheService>, Integer>comparing(ent -> {
+						var anno = ent.getValue();
+						return anno.priority();
 					}));
-			var beanRefCache = registrationStream.map(registration -> {
+			var beanRefCache = registrationAnnos.map(Entry::getKey).map(registration -> {
 				var ct = registration.getAnnotatedClass();
 				var enumConstants = ct.getEnumConstants();
 				if (enumConstants != null && enumConstants.length == 1)

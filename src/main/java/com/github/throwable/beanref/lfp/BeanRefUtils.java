@@ -9,6 +9,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -84,4 +85,34 @@ public class BeanRefUtils {
 		return clSupplierStream.map(Supplier::get).filter(Objects::nonNull).distinct();
 	}
 
+	public static Class<?> classForName(String className, boolean suppressErrors) {
+		if (className == null || className.isEmpty()) {
+			if (suppressErrors)
+				return null;
+			throw new IllegalArgumentException("className required");
+		}
+		RuntimeException error = null;
+		Iterator<ClassLoader> classLoaderIter = BeanRefUtils.streamDefaultClassLoaders().iterator();
+		while (classLoaderIter.hasNext()) {
+			ClassLoader classLoader = classLoaderIter.next();
+			try {
+				var classType = Class.forName(className, false, classLoader);
+				if (classType != null)
+					return classType;
+			} catch (Throwable t) {
+				if (suppressErrors)
+					continue;
+				if (error == null)
+					if (t instanceof RuntimeException)
+						error = (RuntimeException) t;
+					else
+						error = new RuntimeException(t);
+				else
+					error.addSuppressed(t);
+			}
+		}
+		if (suppressErrors)
+			return null;
+		throw error;
+	}
 }
