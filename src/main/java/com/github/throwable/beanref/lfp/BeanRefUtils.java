@@ -64,14 +64,12 @@ public class BeanRefUtils {
 		var ifaces = classType.getInterfaces();
 		if (ifaces.length == 0) {
 			var superclass = classType.getSuperclass();
-			if (superclass == null)
-				throw new IllegalArgumentException(String.format("superclass not found. classType:%s", classType));
-			return (Class<U>) getNamedClassType(superclass);
+			if (superclass != null)
+				return (Class<U>) getNamedClassType(superclass);
 		} else if (ifaces.length == 1)
 			return (Class<U>) getNamedClassType(ifaces[0]);
-		else
-			// if proxy this is the best we can do
-			return (Class<U>) classType;
+		// if proxy/system class this is the best we can do
+		return (Class<U>) classType;
 	}
 
 	public static ClassLoader getDefaultClassLoader() {
